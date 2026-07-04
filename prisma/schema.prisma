@@ -1,0 +1,437 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  EDITOR
+  SUPPORT
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+// ─────────────────────────────────────────────
+// WEBSITE / E-COMMERCE
+// ─────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(CUSTOMER)
+  avatarUrl    String?
+  phone        String?
+  rewardPoints Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders        Order[]
+  addresses     Address[]
+  wishlistItems WishlistItem[]
+  cartItems     CartItem[]
+  reviews       Review[]
+  crmNotes      CrmNote[]
+  tickets       SupportTicket[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  name          String
+  slug          String           @unique
+  description   String?
+  price         Float
+  originalPrice Float?
+  stock         Int              @default(0)
+  categoryId    String
+  category      Category         @relation(fields: [categoryId], references: [id])
+  images        ProductImage[]
+  variants      ProductVariant[]
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+  cartItems     CartItem[]
+  reviews       Review[]
+  badge         String?
+  featured      Boolean          @default(false)
+  isActive      Boolean          @default(true)
+  // CJ Dropshipping fields
+  cjPid         String?
+  cjVid         String?
+  cjSku         String?
+  source        String?          @default("cj")
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  isPrimary Boolean @default(false)
+  sortOrder Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  value     String
+  price     Float?
+  stock     Int     @default(0)
+  sku       String?
+  imageUrl  String?
+
+  @@map("product_variants")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, productId])
+  @@map("cart_items")
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+model Address {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String?
+  fullName   String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String  @default("US")
+  phone      String?
+  isDefault  Boolean @default(false)
+
+  @@map("addresses")
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  orderNumber  String      @unique
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  status       OrderStatus @default(PENDING)
+  items        OrderItem[]
+  shippingAddr Json?
+  billingAddr  Json?
+  subtotal     Float
+  shippingCost Float       @default(0)
+  tax          Float       @default(0)
+  discount     Float       @default(0)
+  total        Float
+  couponCode   String?
+  notes        String?
+  // CJ Dropshipping
+  cjOrderId    String?
+  cjPaymentUrl String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Float
+  quantity  Int
+  imageUrl  String?
+
+  @@map("order_items")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Int
+  title     String?
+  body      String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType
+  discountValue Float
+  minOrderAmt   Float?
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  isActive      Boolean      @default(true)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime     @default(now())
+
+  @@map("coupons")
+}
+
+// ─────────────────────────────────────────────
+// CMS
+// ─────────────────────────────────────────────
+
+model AdminUser {
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         Role            @default(EDITOR)
+  avatarUrl    String?
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  posts        Post[]
+  crmNotes     CrmNote[]
+  assignedTickets SupportTicket[]
+
+  @@map("admin_users")
+}
+
+model Post {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  status      ContentStatus @default(DRAFT)
+  authorId    String
+  author      AdminUser     @relation(fields: [authorId], references: [id])
+  tags        PostTag[]
+  publishedAt DateTime?
+  metaTitle   String?
+  metaDesc    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("posts")
+}
+
+model Tag {
+  id    String    @id @default(cuid())
+  name  String    @unique
+  slug  String    @unique
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model PostTag {
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model Page {
+  id        String        @id @default(cuid())
+  title     String
+  slug      String        @unique
+  content   String
+  metaTitle String?
+  metaDesc  String?
+  status    ContentStatus @default(DRAFT)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("pages")
+}
+
+model Banner {
+  id         String    @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String
+  linkUrl    String?
+  linkLabel  String?
+  isActive   Boolean   @default(true)
+  position   String    @default("hero")
+  startsAt   DateTime?
+  endsAt     DateTime?
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("banners")
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  isActive     Boolean  @default(true)
+  subscribedAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+model MediaAsset {
+  id         String   @id @default(cuid())
+  filename   String
+  url        String
+  mimeType   String
+  size       Int
+  altText    String?
+  uploadedAt DateTime @default(now())
+
+  @@map("media_assets")
+}
+
+// ─────────────────────────────────────────────
+// CRM
+// ─────────────────────────────────────────────
+
+model CrmNote {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    AdminUser @relation(fields: [authorId], references: [id])
+  content   String
+  createdAt DateTime  @default(now())
+
+  @@map("crm_notes")
+}
+
+model CustomerSegment {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String?
+  createdAt   DateTime @default(now())
+
+  @@map("customer_segments")
+}
+
+model SupportTicket {
+  id           String          @id @default(cuid())
+  title        String
+  description  String
+  status       TicketStatus    @default(OPEN)
+  priority     TicketPriority  @default(MEDIUM)
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  assignedToId String?
+  assignedTo   AdminUser?      @relation(fields: [assignedToId], references: [id])
+  messages     TicketMessage[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id         String        @id @default(cuid())
+  ticketId   String
+  ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId   String
+  senderType String
+  content    String
+  createdAt  DateTime      @default(now())
+
+  @@map("ticket_messages")
+}
