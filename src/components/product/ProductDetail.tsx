@@ -1,13 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronRight, Heart, Loader2, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import type { Product } from "@/data/products";
 import { useAddToCart } from "@/lib/products/use-add-to-cart";
+import { getProductImages } from "@/lib/products/gallery";
 import { ProductCard } from "@/components/ProductCard";
+import { ImageGallery } from "@/components/product/ImageGallery";
+import { ProductReviews } from "@/components/product/ProductReviews";
 import { Reveal } from "@/components/motion/Reveal";
 import { fadeInUp, staggerContainer } from "@/lib/motion";
 
@@ -20,7 +22,9 @@ export function ProductDetail({
 }) {
   const [liked, setLiked] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [tab, setTab] = useState<"description" | "reviews">("description");
   const { add, adding, added } = useAddToCart(product);
+  const images = getProductImages(product);
 
   const discount =
     product.originalPrice &&
@@ -44,29 +48,12 @@ export function ProductDetail({
         </nav>
 
         <div className="mt-6 grid gap-8 rounded-2xl bg-white p-4 shadow-sm sm:p-6 lg:grid-cols-2 lg:gap-12 dark:bg-[#0e1c12]">
-          <Reveal
-            variants={fadeInUp}
-            className="relative aspect-square overflow-hidden rounded-xl bg-zencarta-surface"
-          >
-            {product.badge && (
-              <span className="absolute left-3 top-3 z-10 rounded-full bg-zencarta-green px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
-                {product.badge}
-              </span>
-            )}
-            {discount && (
-              <span className="absolute right-3 top-3 z-10 rounded-full bg-zencarta-navy px-2 py-0.5 text-[10px] font-bold text-white">
-                -{discount}%
-              </span>
-            )}
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 hover:scale-105"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-            />
-          </Reveal>
+          <ImageGallery
+            images={images}
+            alt={product.name}
+            badge={product.badge}
+            discount={discount || undefined}
+          />
 
           <Reveal variants={staggerContainer} className="flex flex-col">
             <motion.p
@@ -202,6 +189,50 @@ export function ProductDetail({
               </button>
             </motion.div>
           </Reveal>
+        </div>
+
+        <div className="mt-10 rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-[#0e1c12]">
+          <div className="flex gap-6 border-b border-slate-100 dark:border-[#1f3524]">
+            {(["description", "reviews"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={`relative pb-3 text-sm font-semibold transition-colors ${
+                  tab === t
+                    ? "text-zencarta-green"
+                    : "text-zencarta-muted hover:text-zencarta-navy dark:hover:text-slate-100"
+                }`}
+              >
+                {t === "description" ? "Description" : `Reviews (${product.reviews})`}
+                {tab === t && (
+                  <motion.span
+                    layoutId="product-tab-underline"
+                    className="absolute inset-x-0 -bottom-px h-0.5 bg-zencarta-green"
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="pt-6"
+            >
+              {tab === "description" ? (
+                <p className="max-w-prose text-sm leading-relaxed text-zencarta-muted">
+                  {product.description ?? "No description available for this product yet."}
+                </p>
+              ) : (
+                <ProductReviews product={product} />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {related.length > 0 && (

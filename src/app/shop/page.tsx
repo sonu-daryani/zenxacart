@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, SlidersHorizontal, X } from "lucide-react";
+import { Loader2, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import type { Product } from "@/data/products";
 import { products as fallbackProducts } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
@@ -21,18 +21,48 @@ type ProductsResponse = {
   error?: string;
 };
 
+type Filters = {
+  category: string | null;
+  priceMin: string;
+  priceMax: string;
+  minRating: number;
+  search: string;
+};
+
+const EMPTY_FILTERS: Filters = {
+  category: null,
+  priceMin: "",
+  priceMax: "",
+  minRating: 0,
+  search: "",
+};
+
+const RATING_OPTIONS = [4.5, 4, 3];
+
+function countActiveFilters(f: Filters): number {
+  let n = 0;
+  if (f.category) n++;
+  if (f.priceMin) n++;
+  if (f.priceMax) n++;
+  if (f.minRating > 0) n++;
+  if (f.search.trim()) n++;
+  return n;
+}
+
 function SidebarContent({
   categories,
-  selectedCategory,
-  setSelectedCategory,
+  filters,
+  setFilters,
   sort,
   setSort,
+  onClear,
 }: {
   categories: Category[];
-  selectedCategory: string | null;
-  setSelectedCategory: (id: string | null) => void;
+  filters: Filters;
+  setFilters: (updater: (f: Filters) => Filters) => void;
   sort: SortOption;
   setSort: (s: SortOption) => void;
+  onClear: () => void;
 }) {
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: "featured", label: "Featured" },
@@ -41,8 +71,21 @@ function SidebarContent({
     { value: "rating", label: "Top Rated" },
   ];
 
+  const activeCount = countActiveFilters(filters);
+
   return (
     <div className="space-y-8">
+      {activeCount > 0 && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="flex items-center gap-1.5 text-xs font-semibold text-zencarta-green hover:underline"
+        >
+          <X className="h-3.5 w-3.5" />
+          Clear all filters ({activeCount})
+        </button>
+      )}
+
       <div>
         <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
           Categories
@@ -50,9 +93,9 @@ function SidebarContent({
         <div className="mt-4 flex flex-col gap-1">
           <button
             type="button"
-            onClick={() => setSelectedCategory(null)}
+            onClick={() => setFilters((f) => ({ ...f, category: null }))}
             className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-              selectedCategory === null
+              filters.category === null
                 ? "bg-zencarta-green text-white"
                 : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
             }`}
@@ -63,9 +106,9 @@ function SidebarContent({
             <button
               key={cat.id}
               type="button"
-              onClick={() => setSelectedCategory(cat.id)}
+              onClick={() => setFilters((f) => ({ ...f, category: cat.id }))}
               className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                selectedCategory === cat.id
+                filters.category === cat.id
                   ? "bg-zencarta-green text-white"
                   : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
               }`}
@@ -77,12 +120,83 @@ function SidebarContent({
               {typeof cat.count === "number" && (
                 <span
                   className={`text-xs ${
-                    selectedCategory === cat.id ? "text-white/80" : "text-zencarta-muted"
+                    filters.category === cat.id ? "text-white/80" : "text-zencarta-muted"
                   }`}
                 >
                   {cat.count}
                 </span>
               )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
+          Price Range
+        </h3>
+        <div className="mt-4 flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zencarta-muted">
+              $
+            </span>
+            <input
+              type="number"
+              min={0}
+              inputMode="decimal"
+              placeholder="Min"
+              value={filters.priceMin}
+              onChange={(e) => setFilters((f) => ({ ...f, priceMin: e.target.value }))}
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-6 pr-2 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
+            />
+          </div>
+          <span className="text-zencarta-muted">–</span>
+          <div className="relative flex-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zencarta-muted">
+              $
+            </span>
+            <input
+              type="number"
+              min={0}
+              inputMode="decimal"
+              placeholder="Max"
+              value={filters.priceMax}
+              onChange={(e) => setFilters((f) => ({ ...f, priceMax: e.target.value }))}
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-6 pr-2 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
+          Rating
+        </h3>
+        <div className="mt-4 flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() => setFilters((f) => ({ ...f, minRating: 0 }))}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+              filters.minRating === 0
+                ? "bg-zencarta-green/10 text-zencarta-green"
+                : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
+            }`}
+          >
+            Any rating
+          </button>
+          {RATING_OPTIONS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setFilters((f) => ({ ...f, minRating: r }))}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                filters.minRating === r
+                  ? "bg-zencarta-green/10 text-zencarta-green"
+                  : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
+              }`}
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              {r}+ &amp; up
             </button>
           ))}
         </div>
@@ -120,7 +234,7 @@ function SidebarContent({
 
 export default function ShopPage() {
   const [sort, setSort] = useState<SortOption>("featured");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [catalog, setCatalog] = useState<Product[]>(fallbackProducts);
   const [catalogSource, setCatalogSource] = useState<"cj" | "static">("static");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -159,8 +273,23 @@ export default function ShopPage() {
 
   const sorted = useMemo(() => {
     let list = [...catalog];
-    if (selectedCategory) {
-      list = list.filter((p) => p.category === selectedCategory);
+    if (filters.category) {
+      list = list.filter((p) => p.category === filters.category);
+    }
+    if (filters.priceMin !== "") {
+      const min = Number(filters.priceMin);
+      if (!Number.isNaN(min)) list = list.filter((p) => p.price >= min);
+    }
+    if (filters.priceMax !== "") {
+      const max = Number(filters.priceMax);
+      if (!Number.isNaN(max)) list = list.filter((p) => p.price <= max);
+    }
+    if (filters.minRating > 0) {
+      list = list.filter((p) => p.rating >= filters.minRating);
+    }
+    const query = filters.search.trim().toLowerCase();
+    if (query) {
+      list = list.filter((p) => p.name.toLowerCase().includes(query));
     }
     switch (sort) {
       case "price-low":
@@ -172,7 +301,10 @@ export default function ShopPage() {
       default:
         return list;
     }
-  }, [catalog, sort, selectedCategory]);
+  }, [catalog, sort, filters]);
+
+  const activeCount = countActiveFilters(filters);
+  const clearFilters = () => setFilters(EMPTY_FILTERS);
 
   return (
     <PageShell>
@@ -198,7 +330,23 @@ export default function ShopPage() {
             >
               <SlidersHorizontal className="h-4 w-4" />
               Filters
+              {activeCount > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zencarta-green text-[10px] font-bold text-white">
+                  {activeCount}
+                </span>
+              )}
             </button>
+          </div>
+
+          <div className="relative mt-6 max-w-md">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zencarta-muted" />
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              placeholder="Search products…"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
+            />
           </div>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
@@ -206,10 +354,11 @@ export default function ShopPage() {
               <div className="sticky top-24 rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
                 <SidebarContent
                   categories={categories}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={setSelectedCategory}
+                  filters={filters}
+                  setFilters={setFilters}
                   sort={sort}
                   setSort={setSort}
+                  onClear={clearFilters}
                 />
               </div>
             </aside>
@@ -221,7 +370,16 @@ export default function ShopPage() {
                 </div>
               ) : sorted.length === 0 ? (
                 <div className="rounded-xl border border-slate-100 bg-white p-10 text-center text-sm text-zencarta-muted shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
-                  No products found in this category.
+                  No products match your filters.
+                  {activeCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="ml-2 font-semibold text-zencarta-green hover:underline"
+                    >
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <Reveal
@@ -274,16 +432,11 @@ export default function ShopPage() {
               <div className="flex-1 overflow-y-auto">
                 <SidebarContent
                   categories={categories}
-                  selectedCategory={selectedCategory}
-                  setSelectedCategory={(id) => {
-                    setSelectedCategory(id);
-                    setMobileFiltersOpen(false);
-                  }}
+                  filters={filters}
+                  setFilters={setFilters}
                   sort={sort}
-                  setSort={(s) => {
-                    setSort(s);
-                    setMobileFiltersOpen(false);
-                  }}
+                  setSort={setSort}
+                  onClear={clearFilters}
                 />
               </div>
             </motion.div>

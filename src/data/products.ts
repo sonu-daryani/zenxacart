@@ -7,6 +7,8 @@ export type Product = {
   rating: number;
   reviews: number;
   image: string;
+  /** Additional gallery images; falls back to a single derived-angle gallery when omitted. */
+  images?: string[];
   description?: string;
   badge?: "new" | "sale" | "bestseller";
   /** CJ Dropshipping product ID */
