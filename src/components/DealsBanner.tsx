@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Clock, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Reveal } from "@/components/motion/Reveal";
+import { fadeInUp, scaleIn } from "@/lib/motion";
 
 function useCountdown(targetMinutes: number) {
   const [seconds, setSeconds] = useState(targetMinutes * 60);
@@ -22,8 +25,19 @@ function useCountdown(targetMinutes: number) {
 
 function Pad({ value }: { value: number }) {
   return (
-    <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-xl font-bold tabular-nums text-white backdrop-blur-sm sm:h-14 sm:w-14 sm:text-2xl">
-      {String(value).padStart(2, "0")}
+    <span className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-white/20 text-xl font-bold tabular-nums text-white backdrop-blur-sm sm:h-14 sm:w-14 sm:text-2xl">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={{ y: 14, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -14, opacity: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="absolute"
+        >
+          {String(value).padStart(2, "0")}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
@@ -37,9 +51,13 @@ export function DealsBanner() {
       className="relative overflow-hidden bg-zencarta-navy py-16 sm:py-20"
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-zencarta-green/20 via-transparent to-transparent" />
+      <div
+        className="animate-blob pointer-events-none absolute -right-16 top-1/2 h-64 w-64 -translate-y-1/2 rounded-full bg-zencarta-green/20 blur-3xl"
+        aria-hidden
+      />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-10 lg:flex-row lg:justify-between">
-          <div className="text-center lg:text-left">
+          <Reveal variants={fadeInUp} className="text-center lg:text-left">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-zencarta-green/20 px-4 py-1.5 text-sm font-medium text-zencarta-green-light">
               <Tag className="h-4 w-4" />
               Limited Time Offer
@@ -58,9 +76,9 @@ export function DealsBanner() {
             >
               Shop the Sale
             </Link>
-          </div>
+          </Reveal>
 
-          <div className="flex flex-col items-center gap-3">
+          <Reveal variants={scaleIn} className="flex flex-col items-center gap-3">
             <div className="flex items-center gap-2 text-sm text-slate-300">
               <Clock className="h-4 w-4" />
               Ends in
@@ -81,7 +99,7 @@ export function DealsBanner() {
                 <span className="text-xs text-slate-400">Secs</span>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

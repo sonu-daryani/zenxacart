@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  PayPalButtons,
-  PayPalScriptProvider,
-  type OnApproveData,
-} from "@paypal/react-paypal-js";
+import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js";
+import type { OnApproveData } from "@paypal/paypal-js";
 
 export function PayPalPayment({
   total,
@@ -60,7 +57,7 @@ export function PayPalPayment({
       <button
         type="button"
         onClick={onBack}
-        className="w-full rounded-lg border border-slate-200 py-3 text-sm font-medium text-zencarta-navy hover:bg-zencarta-surface"
+        className="w-full rounded-lg border border-slate-200 py-3 text-sm font-medium text-zencarta-navy hover:bg-zencarta-surface dark:border-[#1f3524] dark:text-slate-100"
       >
         Back to shipping
       </button>

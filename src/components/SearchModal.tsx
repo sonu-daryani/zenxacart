@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 
@@ -33,24 +34,33 @@ export function SearchModal() {
     );
   }, [query]);
 
-  if (!isSearchOpen) return null;
-
   return (
-    <>
-      <div
-        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-        onClick={closeSearch}
-        aria-hidden
-      />
-      <div className="fixed inset-x-4 top-[10%] z-50 mx-auto max-w-2xl rounded-2xl bg-white shadow-2xl sm:inset-x-auto">
-        <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-4">
+    <AnimatePresence>
+      {isSearchOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            onClick={closeSearch}
+            aria-hidden
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-x-4 top-[10%] z-50 mx-auto max-w-2xl rounded-2xl bg-white shadow-2xl sm:inset-x-auto dark:bg-[#0e1c12]"
+          >
+        <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-4 dark:border-[#1f3524]">
           <Search className="h-5 w-5 shrink-0 text-zencarta-muted" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search products, categories..."
-            className="flex-1 bg-transparent text-zencarta-navy outline-none placeholder:text-zencarta-muted"
+            className="flex-1 bg-transparent text-zencarta-navy outline-none placeholder:text-zencarta-muted dark:text-slate-100"
             autoFocus
             aria-label="Search products"
           />
@@ -88,7 +98,7 @@ export function SearchModal() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-semibold text-zencarta-navy">
+                    <p className="truncate text-sm font-semibold text-zencarta-navy dark:text-slate-100">
                       {product.name}
                     </p>
                     <p className="text-sm text-zencarta-green">
@@ -105,7 +115,9 @@ export function SearchModal() {
             )}
           </ul>
         </div>
-      </div>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

@@ -16,8 +16,8 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
 
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-        <p className="font-medium text-zencarta-navy">Your cart is empty</p>
+      <div className="rounded-xl border border-slate-100 bg-white p-6 text-center shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
+        <p className="font-medium text-zencarta-navy dark:text-slate-100">Your cart is empty</p>
         <Link
           href="/#products"
           className="mt-4 inline-block text-sm font-semibold text-zencarta-green hover:underline"
@@ -29,8 +29,8 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
   }
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-bold text-zencarta-navy">Order Summary</h2>
+    <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
+      <h2 className="text-lg font-bold text-zencarta-navy dark:text-slate-100">Order Summary</h2>
       <ul className="mt-4 max-h-64 space-y-3 overflow-y-auto">
         {items.map((item) => (
           <li key={item.id} className="flex gap-3">
@@ -44,7 +44,7 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-zencarta-navy">
+              <p className="truncate text-sm font-medium text-zencarta-navy dark:text-slate-100">
                 {item.name}
               </p>
               <p className="text-sm text-zencarta-green">
@@ -54,7 +54,7 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
                 <button
                   type="button"
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="rounded border border-slate-200 p-0.5 hover:border-zencarta-green"
+                  className="rounded border border-slate-200 p-0.5 hover:border-zencarta-green dark:border-[#2a4530]"
                   aria-label="Decrease"
                 >
                   <Minus className="h-3 w-3" />
@@ -63,28 +63,28 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
                 <button
                   type="button"
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="rounded border border-slate-200 p-0.5 hover:border-zencarta-green"
+                  className="rounded border border-slate-200 p-0.5 hover:border-zencarta-green dark:border-[#2a4530]"
                   aria-label="Increase"
                 >
                   <Plus className="h-3 w-3" />
                 </button>
               </div>
             </div>
-            <p className="text-sm font-semibold text-zencarta-navy">
+            <p className="text-sm font-semibold text-zencarta-navy dark:text-slate-100">
               ${(item.price * item.quantity).toFixed(2)}
             </p>
           </li>
         ))}
       </ul>
 
-      <dl className="mt-6 space-y-2 border-t border-slate-100 pt-4 text-sm">
+      <dl className="mt-6 space-y-2 border-t border-slate-100 pt-4 text-sm dark:border-[#1f3524]">
         <div className="flex justify-between">
           <dt className="text-zencarta-muted">Subtotal</dt>
-          <dd className="font-medium text-zencarta-navy">${subtotal.toFixed(2)}</dd>
+          <dd className="font-medium text-zencarta-navy dark:text-slate-100">${subtotal.toFixed(2)}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-zencarta-muted">Shipping</dt>
-          <dd className="font-medium text-zencarta-navy">
+          <dd className="font-medium text-zencarta-navy dark:text-slate-100">
             {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
           </dd>
         </div>
@@ -95,10 +95,10 @@ export function OrderSummary({ showCheckoutButton = false }: { showCheckoutButto
         )}
         <div className="flex justify-between">
           <dt className="text-zencarta-muted">Estimated tax</dt>
-          <dd className="font-medium text-zencarta-navy">${tax.toFixed(2)}</dd>
+          <dd className="font-medium text-zencarta-navy dark:text-slate-100">${tax.toFixed(2)}</dd>
         </div>
-        <div className="flex justify-between border-t border-slate-100 pt-2 text-base">
-          <dt className="font-bold text-zencarta-navy">Total</dt>
+        <div className="flex justify-between border-t border-slate-100 pt-2 text-base dark:border-[#1f3524]">
+          <dt className="font-bold text-zencarta-navy dark:text-slate-100">Total</dt>
           <dd className="font-bold text-zencarta-green">${total.toFixed(2)}</dd>
         </div>
       </dl>

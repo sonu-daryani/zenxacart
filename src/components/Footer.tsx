@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Globe, MessageCircle, Share2 } from "lucide-react";
 import { ZencartaLogo } from "@/components/ZencartaLogo";
+import { Reveal } from "@/components/motion/Reveal";
+import { fadeInUp } from "@/lib/motion";
 
 const footerLinks = {
   Shop: ["All Products", "New Arrivals", "Best Sellers", "Deals"],
@@ -10,11 +12,11 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-100 bg-zencarta-navy text-slate-300">
+    <footer className="border-t border-white/10 bg-zencarta-navy text-slate-300">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
+        <Reveal variants={fadeInUp} className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <ZencartaLogo variant="dark" href="/" />
+            <ZencartaLogo variant="dark" href="/" size="h-10" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed">
               Shop Smart. Live Easy. Your destination for quality products,
               fast shipping, and exceptional service.
@@ -41,16 +43,17 @@ export function Footer() {
                   <li key={link}>
                     <Link
                       href="#"
-                      className="text-sm transition-colors hover:text-zencarta-green-light"
+                      className="group relative inline-block text-sm transition-colors hover:text-zencarta-green-light"
                     >
                       {link}
+                      <span className="absolute bottom-0 left-0 h-px w-0 bg-zencarta-green-light transition-all duration-300 group-hover:w-full" />
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-        </div>
+        </Reveal>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs">

@@ -23,7 +23,7 @@ export function FormField({
     <div>
       <label
         htmlFor={id}
-        className="mb-1.5 block text-sm font-medium text-zencarta-navy"
+        className="mb-1.5 block text-sm font-medium text-zencarta-navy dark:text-slate-100"
       >
         {label}
       </label>
@@ -35,7 +35,7 @@ export function FormField({
         placeholder={placeholder}
         required={required}
         autoComplete={autoComplete}
-        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-zencarta-navy outline-none transition-colors placeholder:text-zencarta-muted focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20"
+        className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-zencarta-navy outline-none transition-colors placeholder:text-zencarta-muted focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#2a4530] dark:bg-[#16281b] dark:text-slate-100"
       />
     </div>
   );

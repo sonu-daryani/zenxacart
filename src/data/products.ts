@@ -7,6 +7,7 @@ export type Product = {
   rating: number;
   reviews: number;
   image: string;
+  description?: string;
   badge?: "new" | "sale" | "bestseller";
   /** CJ Dropshipping product ID */
   cjPid?: string;
@@ -37,6 +38,8 @@ export const products: Product[] = [
     reviews: 342,
     image:
       "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
+    description:
+      "Rich, room-filling sound in a compact, splash-resistant body. Up to 12 hours of playback on a single charge, with easy Bluetooth pairing to any device.",
     badge: "sale",
     source: "static",
   },
@@ -49,6 +52,8 @@ export const products: Product[] = [
     reviews: 521,
     image:
       "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop",
+    description:
+      "A timeless low-top silhouette in premium leather, built on a cushioned sole for all-day comfort. Pairs with everything from denim to dresses.",
     badge: "bestseller",
     source: "static",
   },
@@ -61,6 +66,8 @@ export const products: Product[] = [
     reviews: 198,
     image:
       "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop",
+    description:
+      "Polarized UV400 lenses in a classic tortoiseshell frame. Lightweight acetate construction with spring hinges for a comfortable, secure fit.",
     badge: "new",
     source: "static",
   },
@@ -74,6 +81,8 @@ export const products: Product[] = [
     reviews: 412,
     image:
       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
+    description:
+      "Track heart rate, sleep, and workouts with a bright always-on display and up to 7 days of battery life. Water-resistant to 50 meters.",
     badge: "sale",
     source: "static",
   },
@@ -86,6 +95,8 @@ export const products: Product[] = [
     reviews: 267,
     image:
       "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&h=400&fit=crop",
+    description:
+      "A 4-piece routine of cleanser, toner, serum, and moisturizer made with certified organic botanicals. Suitable for all skin types.",
     badge: "bestseller",
     source: "static",
   },
@@ -98,6 +109,8 @@ export const products: Product[] = [
     reviews: 143,
     image:
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop",
+    description:
+      "Stepless touch dimming across 3 color temperatures, with a folding arm that tucks flat when not in use. USB-C powered.",
     badge: "new",
     source: "static",
   },
@@ -110,6 +123,8 @@ export const products: Product[] = [
     reviews: 89,
     image:
       "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=400&fit=crop",
+    description:
+      "Extra-thick, non-slip 6mm cushioning with a moisture-resistant surface on both sides. Includes a carrying strap.",
     source: "static",
   },
   {
@@ -121,7 +136,9 @@ export const products: Product[] = [
     rating: 4.9,
     reviews: 334,
     image:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d6fa51?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=400&h=400&fit=crop",
+    description:
+      "Full-grain leather crossbody with an adjustable strap and a structured interior with card slots. Compact enough for everyday essentials.",
     badge: "sale",
     source: "static",
   },

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ZencartaLogo } from "@/components/ZencartaLogo";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   CheckCircle,
   CreditCard,
@@ -121,8 +122,8 @@ export default function CheckoutPage() {
     return (
       <PageShell>
         <div className="mx-auto max-w-lg px-4 py-24 text-center">
-          <Truck className="mx-auto h-16 w-16 text-slate-200" />
-          <h1 className="mt-4 text-2xl font-bold text-zencarta-navy">
+          <Truck className="mx-auto h-16 w-16 text-slate-200 dark:text-slate-700" />
+          <h1 className="mt-4 text-2xl font-bold text-zencarta-navy dark:text-slate-100">
             Nothing to checkout
           </h1>
           <p className="mt-2 text-zencarta-muted">
@@ -142,9 +143,20 @@ export default function CheckoutPage() {
   if (step === "done") {
     return (
       <PageShell>
-        <div className="mx-auto max-w-lg px-4 py-24 text-center">
-          <CheckCircle className="mx-auto h-16 w-16 text-zencarta-green" />
-          <h1 className="mt-4 text-2xl font-bold text-zencarta-navy">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto max-w-lg px-4 py-24 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: -30 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 18 }}
+          >
+            <CheckCircle className="mx-auto h-16 w-16 text-zencarta-green" />
+          </motion.div>
+          <h1 className="mt-4 text-2xl font-bold text-zencarta-navy dark:text-slate-100">
             Order placed!
           </h1>
           <p className="mt-2 text-zencarta-muted">
@@ -152,7 +164,7 @@ export default function CheckoutPage() {
             {shipping.email || user?.email}.
           </p>
           {cjOrderId && (
-            <p className="mt-3 text-sm font-medium text-zencarta-navy">
+            <p className="mt-3 text-sm font-medium text-zencarta-navy dark:text-slate-100">
               CJ Order ID: {cjOrderId}
             </p>
           )}
@@ -180,7 +192,7 @@ export default function CheckoutPage() {
               Continue Shopping
             </Link>
           </div>
-        </div>
+        </motion.div>
       </PageShell>
     );
   }
@@ -194,7 +206,7 @@ export default function CheckoutPage() {
     <PageShell>
       <div className="bg-zencarta-surface py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-zencarta-navy">Checkout</h1>
+          <h1 className="text-3xl font-bold text-zencarta-navy dark:text-slate-100">Checkout</h1>
           {!user && (
             <p className="mt-2 text-sm text-zencarta-muted">
               Already have an account?{" "}
@@ -209,39 +221,57 @@ export default function CheckoutPage() {
           )}
 
           <div className="mt-6 flex gap-4">
-            {steps.map((s, i) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                    step === s.id || (step === "payment" && s.id === "shipping")
-                      ? "bg-zencarta-green text-white"
-                      : "bg-slate-200 text-zencarta-muted"
-                  }`}
-                >
-                  {i + 1}
+            {steps.map((s, i) => {
+              const filled =
+                step === s.id || (step === "payment" && s.id === "shipping");
+              return (
+                <div key={s.id} className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ scale: filled ? 1 : 0.94 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 24 }}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                      filled
+                        ? "bg-zencarta-green text-white"
+                        : "bg-slate-200 text-zencarta-muted dark:bg-[#16281b]"
+                    }`}
+                  >
+                    {i + 1}
+                  </motion.div>
+                  <span
+                    className={`hidden text-sm font-medium sm:block ${
+                      step === s.id ? "text-zencarta-navy dark:text-slate-100" : "text-zencarta-muted"
+                    }`}
+                  >
+                    {s.label}
+                  </span>
+                  {i < steps.length - 1 && (
+                    <div className="relative mx-2 hidden h-px w-12 overflow-hidden bg-slate-200 sm:block dark:bg-[#16281b]">
+                      <motion.div
+                        className="absolute inset-y-0 left-0 bg-zencarta-green"
+                        animate={{ width: step === "payment" ? "100%" : "0%" }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                      />
+                    </div>
+                  )}
                 </div>
-                <span
-                  className={`hidden text-sm font-medium sm:block ${
-                    step === s.id ? "text-zencarta-navy" : "text-zencarta-muted"
-                  }`}
-                >
-                  {s.label}
-                </span>
-                {i < steps.length - 1 && (
-                  <div className="mx-2 hidden h-px w-12 bg-slate-200 sm:block" />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-10 grid gap-8 lg:grid-cols-5">
             <div className="lg:col-span-3">
+            <AnimatePresence mode="wait" initial={false}>
               {step === "shipping" && (
-                <form
+                <motion.form
+                  key="shipping"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
                   onSubmit={handleShippingSubmit}
-                  className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8"
+                  className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8 dark:border-[#1f3524] dark:bg-[#0e1c12]"
                 >
-                  <h2 className="flex items-center gap-2 text-lg font-bold text-zencarta-navy">
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-zencarta-navy dark:text-slate-100">
                     <MapPin className="h-5 w-5 text-zencarta-green" />
                     Shipping address
                   </h2>
@@ -337,11 +367,18 @@ export default function CheckoutPage() {
                   >
                     Continue to Payment
                   </button>
-                </form>
+                </motion.form>
               )}
 
               {step === "payment" && (
-                <div className="flex flex-col gap-2">
+                <motion.div
+                  key="payment"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="flex flex-col gap-2"
+                >
                     <PayPalPayment total={0} orderNumber={""} onSuccess={function (paypalOrderId: string): void {
                     throw new Error("Function not implemented.");
                   } } onError={function (msg: string): void {
@@ -356,15 +393,16 @@ export default function CheckoutPage() {
                   } } onBack={function (): void {
                     throw new Error("Function not implemented.");
                   } } />
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
             </div>
 
             <div className="lg:col-span-2">
               <OrderSummary />
-              <div className="mt-4 flex items-center gap-3 rounded-lg border border-slate-100 bg-white p-4">
+              <div className="mt-4 flex items-center gap-3 rounded-lg border border-slate-100 bg-white p-4 dark:border-[#1f3524] dark:bg-[#0e1c12]">
                 <div className="origin-left scale-75 opacity-90">
-                  <ZencartaLogo variant="light" showTagline={false} href={false} />
+                  <ZencartaLogo variant="auto" showTagline={false} href={false} />
                 </div>
                 <p className="text-xs text-zencarta-muted">
                   Secure checkout · 100% protected · 30-day easy returns

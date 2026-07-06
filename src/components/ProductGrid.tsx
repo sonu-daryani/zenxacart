@@ -1,10 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Loader2, SlidersHorizontal } from "lucide-react";
+import { motion } from "framer-motion";
 import type { Product } from "@/data/products";
 import { products as fallbackProducts } from "@/data/products";
 import { ProductCard } from "./ProductCard";
+import { Reveal } from "@/components/motion/Reveal";
+import { staggerContainer } from "@/lib/motion";
+
+const PAGE_SIZE = 6;
 
 type SortOption = "featured" | "price-low" | "price-high" | "rating";
 
@@ -73,6 +79,9 @@ export function ProductGrid() {
     }
   }, [catalog, sort, selectedCategory]);
 
+  const visible = sorted.slice(0, PAGE_SIZE);
+  const hasMore = sorted.length > PAGE_SIZE;
+
   return (
     <section id="products" className="py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -81,7 +90,7 @@ export function ProductGrid() {
             <span className="text-xs font-semibold tracking-widest text-zencarta-green uppercase">
               {catalogSource === "cj" ? "CJ Dropshipping" : "Best Sellers"}
             </span>
-            <h2 className="mt-2 text-3xl font-bold text-zencarta-navy sm:text-4xl">
+            <h2 className="mt-2 text-3xl font-bold text-zencarta-navy sm:text-4xl dark:text-slate-100">
               Trending Products
             </h2>
             {catalogSource === "cj" && (
@@ -95,7 +104,7 @@ export function ProductGrid() {
             <button
               type="button"
               onClick={() => setFilterOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green lg:hidden"
+              className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green lg:hidden dark:border-[#1f3524] dark:text-slate-100"
             >
               <SlidersHorizontal className="h-4 w-4" />
               Filters
@@ -103,7 +112,7 @@ export function ProductGrid() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20"
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
               aria-label="Sort products"
             >
               <option value="featured">Featured</option>
@@ -123,7 +132,7 @@ export function ProductGrid() {
               className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
                 selectedCategory === null
                   ? "border-zencarta-green bg-zencarta-green text-white"
-                  : "border-slate-200 text-zencarta-navy hover:border-zencarta-green hover:text-zencarta-green"
+                  : "border-slate-200 text-zencarta-navy hover:border-zencarta-green hover:text-zencarta-green dark:border-[#1f3524] dark:text-slate-100"
               }`}
             >
               All
@@ -136,7 +145,7 @@ export function ProductGrid() {
                 className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
                   selectedCategory === cat.id
                     ? "border-zencarta-green bg-zencarta-green text-white"
-                    : "border-slate-200 text-zencarta-navy hover:border-zencarta-green hover:text-zencarta-green"
+                    : "border-slate-200 text-zencarta-navy hover:border-zencarta-green hover:text-zencarta-green dark:border-[#1f3524] dark:text-slate-100"
                 }`}
               >
                 {cat.name}
@@ -150,11 +159,30 @@ export function ProductGrid() {
             <Loader2 className="h-8 w-8 animate-spin text-zencarta-green" />
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {sorted.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <Reveal
+              variants={staggerContainer}
+              className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4"
+            >
+              {visible.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </Reveal>
+
+            {hasMore && (
+              <div className="mt-10 flex justify-center">
+                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+                  <Link
+                    href="/shop"
+                    className="flex items-center gap-2 rounded-lg border-2 border-zencarta-green px-7 py-3 text-sm font-bold tracking-wide text-zencarta-green uppercase transition-colors hover:bg-zencarta-green/5"
+                  >
+                    Show More
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </motion.div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

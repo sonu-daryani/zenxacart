@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import Link from "next/link";
+import { Check, Heart, Loader2, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Product } from "@/data/products";
-import { useCart } from "@/context/CartContext";
-import { resolveCjProductForCart } from "@/lib/products/resolve-cj-product";
+import { useAddToCart } from "@/lib/products/use-add-to-cart";
+import { fadeInUp } from "@/lib/motion";
 
 const badgeStyles = {
   new: "bg-blue-500",
@@ -14,22 +16,8 @@ const badgeStyles = {
 };
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart } = useCart();
   const [liked, setLiked] = useState(false);
-  const [added, setAdded] = useState(false);
-  const [adding, setAdding] = useState(false);
-
-  const handleAdd = async () => {
-    setAdding(true);
-    try {
-      const resolved = await resolveCjProductForCart(product);
-      addToCart(resolved);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 1500);
-    } finally {
-      setAdding(false);
-    }
-  };
+  const { add, adding, added } = useAddToCart(product);
 
   const discount =
     product.originalPrice &&
@@ -38,7 +26,11 @@ export function ProductCard({ product }: { product: Product }) {
     );
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-100 bg-white transition-all hover:border-zencarta-green/30 hover:shadow-xl hover:shadow-slate-200/60">
+    <motion.article
+      variants={fadeInUp}
+      whileHover={{ y: -6 }}
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-100 bg-white transition-colors hover:border-zencarta-green/30 hover:shadow-xl hover:shadow-slate-200/60 dark:border-[#1f3524] dark:bg-[#0e1c12]"
+    >
       {product.badge && (
         <span
           className={`absolute left-3 top-3 z-10 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase ${badgeStyles[product.badge]}`}
@@ -55,23 +47,31 @@ export function ProductCard({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => setLiked((v) => !v)}
-        className="absolute right-3 top-12 z-10 rounded-full bg-white/90 p-2 shadow-sm transition-colors hover:bg-white"
+        className="absolute right-3 top-12 z-10 rounded-full bg-white/90 p-2 shadow-sm transition-colors hover:bg-white dark:bg-[#16281b]/90 dark:hover:bg-[#16281b]"
         aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
       >
-        <Heart
-          className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-zencarta-muted"}`}
-        />
+        <motion.span
+          animate={liked ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35 }}
+          className="block"
+        >
+          <Heart
+            className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-zencarta-muted"}`}
+          />
+        </motion.span>
       </button>
 
-      <div className="relative aspect-square overflow-hidden bg-zencarta-surface">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-        />
-      </div>
+      <Link href={`/product/${product.id}`} className="contents">
+        <div className="relative aspect-square overflow-hidden bg-zencarta-surface">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        </div>
+      </Link>
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center gap-2">
@@ -84,13 +84,15 @@ export function ProductCard({ product }: { product: Product }) {
             </span>
           )}
         </div>
-        <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-zencarta-navy">
-          {product.name}
-        </h3>
+        <Link href={`/product/${product.id}`}>
+          <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-zencarta-navy hover:text-zencarta-green dark:text-slate-100">
+            {product.name}
+          </h3>
+        </Link>
 
         <div className="mt-2 flex items-center gap-1">
           <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-          <span className="text-xs font-medium text-zencarta-navy">
+          <span className="text-xs font-medium text-zencarta-navy dark:text-slate-100">
             {product.rating}
           </span>
           <span className="text-xs text-zencarta-muted">
@@ -100,7 +102,7 @@ export function ProductCard({ product }: { product: Product }) {
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-4">
           <div>
-            <span className="text-sm xs:text-base font-bold text-zencarta-navy sm:text-lg">
+            <span className="text-sm xs:text-base font-bold text-zencarta-navy sm:text-lg dark:text-slate-100">
               ${product.price.toFixed(2)}
             </span>
             {product.originalPrice && (
@@ -109,21 +111,39 @@ export function ProductCard({ product }: { product: Product }) {
               </span>
             )}
           </div>
-          <button
+          <motion.button
             type="button"
-            onClick={handleAdd}
+            onClick={() => add()}
             disabled={adding}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 ${
+            whileTap={{ scale: 0.95 }}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
               added
                 ? "bg-zencarta-navy text-white"
                 : "bg-zencarta-green text-white hover:bg-zencarta-green-dark"
             }`}
           >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            {adding ? "…" : added ? "Added!" : "Add"}
-          </button>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={adding ? "adding" : added ? "added" : "idle"}
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1.5"
+              >
+                {adding ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : added ? (
+                  <Check className="h-3.5 w-3.5" />
+                ) : (
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                )}
+                {adding ? "" : added ? "Added!" : "Add"}
+              </motion.span>
+            </AnimatePresence>
+          </motion.button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

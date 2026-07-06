@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Reveal } from "@/components/motion/Reveal";
+import { staggerContainer, fadeInUp } from "@/lib/motion";
 
 type Category = {
   id: string;
@@ -40,7 +43,7 @@ export function Categories() {
           <span className="text-xs font-semibold tracking-widest text-zencarta-green uppercase">
             Browse
           </span>
-          <h2 className="mt-2 text-3xl font-bold text-zencarta-navy sm:text-4xl">
+          <h2 className="mt-2 text-3xl font-bold text-zencarta-navy sm:text-4xl dark:text-slate-100">
             Shop by Category
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-zencarta-muted">
@@ -53,30 +56,39 @@ export function Categories() {
             <Loader2 className="h-8 w-8 animate-spin text-zencarta-green" />
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <Reveal
+            variants={staggerContainer}
+            className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6"
+          >
             {categories.map((cat) => (
-              <button
+              <motion.button
                 key={cat.id}
                 type="button"
+                variants={fadeInUp}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setActive(cat.id)}
-                className={`group flex flex-col items-center rounded-xl border-2 p-5 transition-all ${
-                  active === cat.id
-                    ? "border-zencarta-green bg-white shadow-lg shadow-zencarta-green/10"
-                    : "border-transparent bg-white hover:border-zencarta-green/30 hover:shadow-md"
-                }`}
+                className="relative flex flex-col items-center overflow-hidden rounded-xl border-2 border-transparent bg-white p-5 transition-colors hover:border-zencarta-green/30 hover:shadow-md dark:bg-[#16281b]"
               >
-                <span className="text-3xl transition-transform group-hover:scale-110">
+                {active === cat.id && (
+                  <motion.span
+                    layoutId="category-active"
+                    className="absolute inset-0 rounded-xl border-2 border-zencarta-green shadow-lg shadow-zencarta-green/10"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <span className="relative text-3xl transition-transform group-hover:scale-110">
                   {cat.icon}
                 </span>
-                <span className="mt-3 text-sm font-semibold text-zencarta-navy">
+                <span className="relative mt-3 text-sm font-semibold text-zencarta-navy dark:text-slate-100">
                   {cat.name}
                 </span>
-                <span className="mt-1 text-xs text-zencarta-muted">
+                <span className="relative mt-1 text-xs text-zencarta-muted">
                   {cat.count} items
                 </span>
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </Reveal>
         )}
       </div>
     </section>

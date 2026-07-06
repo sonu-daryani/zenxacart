@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import { CartUpsell } from "@/components/CartUpsell";
 
 export function CartDrawer() {
   const {
@@ -16,22 +18,29 @@ export function CartDrawer() {
     clearCart,
   } = useCart();
 
-  if (!isCartOpen) return null;
-
   return (
-    <>
-      <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-        onClick={closeCart}
-        aria-hidden
-      />
-      <aside
-        className="animate-slide-in-right fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
-        role="dialog"
-        aria-label="Shopping cart"
-      >
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-zencarta-navy">
+    <AnimatePresence>
+      {isCartOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            onClick={closeCart}
+            aria-hidden
+          />
+          <motion.aside
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 340, damping: 34 }}
+            className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col bg-white shadow-2xl dark:bg-[#0e1c12]"
+            role="dialog"
+            aria-label="Shopping cart"
+          >
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-[#1f3524]">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-zencarta-navy dark:text-slate-100">
             <ShoppingBag className="h-5 w-5 text-zencarta-green" />
             Your Cart ({items.length})
           </h2>
@@ -48,8 +57,8 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <ShoppingBag className="h-16 w-16 text-slate-200" />
-              <p className="mt-4 font-medium text-zencarta-navy">
+              <ShoppingBag className="h-16 w-16 text-slate-200 dark:text-slate-700" />
+              <p className="mt-4 font-medium text-zencarta-navy dark:text-slate-100">
                 Your cart is empty
               </p>
               <p className="mt-1 text-sm text-zencarta-muted">
@@ -68,7 +77,7 @@ export function CartDrawer() {
               {items.map((item) => (
                 <li
                   key={item.id}
-                  className="flex gap-4 rounded-lg border border-slate-100 p-3"
+                  className="flex gap-4 rounded-lg border border-slate-100 p-3 dark:border-[#1f3524]"
                 >
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-zencarta-surface">
                     <Image
@@ -80,14 +89,14 @@ export function CartDrawer() {
                     />
                   </div>
                   <div className="flex flex-1 flex-col">
-                    <p className="line-clamp-2 text-sm font-semibold text-zencarta-navy">
+                    <p className="line-clamp-2 text-sm font-semibold text-zencarta-navy dark:text-slate-100">
                       {item.name}
                     </p>
                     <p className="mt-1 text-sm font-bold text-zencarta-green">
                       ${item.price.toFixed(2)}
                     </p>
                     <div className="mt-auto flex items-center justify-between">
-                      <div className="flex items-center gap-2 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-[#2a4530]">
                         <button
                           type="button"
                           onClick={() =>
@@ -128,11 +137,13 @@ export function CartDrawer() {
           )}
         </div>
 
+        {items.length > 0 && <CartUpsell items={items} />}
+
         {items.length > 0 && (
-          <div className="border-t border-slate-100 p-5">
+          <div className="border-t border-slate-100 p-5 dark:border-[#1f3524]">
             <div className="mb-4 flex justify-between text-sm">
               <span className="text-zencarta-muted">Subtotal</span>
-              <span className="text-lg font-bold text-zencarta-navy">
+              <span className="text-lg font-bold text-zencarta-navy dark:text-slate-100">
                 ${subtotal.toFixed(2)}
               </span>
             </div>
@@ -154,8 +165,10 @@ export function CartDrawer() {
               Clear cart
             </button>
           </div>
-        )}
-      </aside>
-    </>
+            )}
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
   );
 }

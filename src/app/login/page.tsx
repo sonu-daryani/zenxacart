@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { FormField } from "@/components/FormField";
@@ -57,14 +57,7 @@ function LoginForm() {
       <div className="relative hidden w-1/2 overflow-hidden bg-zencarta-navy lg:block">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-zencarta-green/30 via-transparent to-transparent" />
         <div className="relative flex h-full flex-col items-center justify-center p-12">
-          <Image
-            src="/brand/logo.png"
-            alt="Zencarta"
-            width={320}
-            height={480}
-            className="w-72 max-w-full object-contain"
-            priority
-          />
+          <ZencartaLogo variant="dark" href={false} size="h-16" />
           <p className="mt-8 max-w-sm text-center text-lg text-slate-300">
             Shop Smart. Live Easy. Sign in to track orders, save addresses, and
             checkout faster.
@@ -75,35 +68,56 @@ function LoginForm() {
       <div className="flex w-full flex-col justify-center px-6 py-12 sm:px-12 lg:w-1/2 lg:px-16">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 lg:hidden">
-            <ZencartaLogo variant="light" href="/" />
+            <ZencartaLogo variant="auto" href="/" />
           </div>
 
-          <h1 className="text-2xl font-bold text-zencarta-navy sm:text-3xl">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="mt-2 text-sm text-zencarta-muted">
-            {mode === "signin"
-              ? "New to Zencarta? Create an account in seconds."
-              : "Join Zencarta to track orders, save addresses, and checkout faster."}
-          </p>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={mode}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <h1 className="text-2xl font-bold text-zencarta-navy sm:text-3xl dark:text-slate-100">
+                {mode === "signin" ? "Welcome back" : "Create your account"}
+              </h1>
+              <p className="mt-2 text-sm text-zencarta-muted">
+                {mode === "signin"
+                  ? "New to Zencarta? Create an account in seconds."
+                  : "Join Zencarta to track orders, save addresses, and checkout faster."}
+              </p>
+            </motion.div>
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {error && (
-              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
                 {error}
               </p>
             )}
-            {mode === "register" && (
-              <FormField
-                label="Full name"
-                id="name"
-                value={name}
-                onChange={setName}
-                placeholder="Jane Doe"
-                required
-                autoComplete="name"
-              />
-            )}
+            <AnimatePresence initial={false}>
+              {mode === "register" && (
+                <motion.div
+                  key="name-field"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <FormField
+                    label="Full name"
+                    id="name"
+                    value={name}
+                    onChange={setName}
+                    placeholder="Jane Doe"
+                    required
+                    autoComplete="name"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
             <FormField
               label="Email"
               id="email"
@@ -117,7 +131,7 @@ function LoginForm() {
             <div>
               <label
                 htmlFor="password"
-                className="mb-1.5 block text-sm font-medium text-zencarta-navy"
+                className="mb-1.5 block text-sm font-medium text-zencarta-navy dark:text-slate-100"
               >
                 Password
               </label>
@@ -131,12 +145,12 @@ function LoginForm() {
                   required
                   minLength={6}
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#2a4530] dark:bg-[#16281b] dark:text-slate-100"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zencarta-muted hover:text-zencarta-navy"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zencarta-muted hover:text-zencarta-navy dark:hover:text-slate-100"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -152,7 +166,7 @@ function LoginForm() {
               <label className="flex items-center gap-2 text-zencarta-muted">
                 <input
                   type="checkbox"
-                  className="rounded border-slate-300 text-zencarta-green focus:ring-zencarta-green"
+                  className="rounded border-slate-300 text-zencarta-green focus:ring-zencarta-green dark:border-[#2a4530]"
                 />
                 Remember me
               </label>

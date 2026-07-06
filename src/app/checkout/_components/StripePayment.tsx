@@ -83,7 +83,7 @@ function StripeForm({
         <button
           type="button"
           onClick={onBack}
-          className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-medium text-zencarta-navy hover:bg-zencarta-surface"
+          className="rounded-lg border border-slate-200 px-6 py-3 text-sm font-medium text-zencarta-navy hover:bg-zencarta-surface dark:border-[#1f3524] dark:text-slate-100"
         >
           Back
         </button>

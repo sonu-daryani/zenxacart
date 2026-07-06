@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Loader2,
   LogOut,
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { FormField } from "@/components/FormField";
+import { Reveal } from "@/components/motion/Reveal";
+import { staggerContainer, fadeInUp } from "@/lib/motion";
 import { useAuth } from "@/context/AuthContext";
 
 type AccountOrder = {
@@ -185,14 +188,14 @@ export default function AccountPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-zencarta-navy">
+              <h1 className="text-3xl font-bold text-zencarta-navy dark:text-slate-100">
                 My Account
               </h1>
               <p className="mt-1 text-zencarta-muted">
                 Welcome back, {user.name}
               </p>
               {accountError && (
-                <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                <p className="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
                   {accountError}
                 </p>
               )}
@@ -200,7 +203,7 @@ export default function AccountPage() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-red-200 hover:text-red-600"
+              className="inline-flex items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-red-200 hover:text-red-600 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100 dark:hover:border-red-900/50 dark:hover:text-red-400"
             >
               <LogOut className="h-4 w-4" />
               Sign out
@@ -218,7 +221,7 @@ export default function AccountPage() {
                     className={`flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                       tab === id
                         ? "bg-zencarta-green text-white"
-                        : "bg-white text-zencarta-navy hover:bg-zencarta-green/10 hover:text-zencarta-green"
+                        : "bg-white text-zencarta-navy hover:bg-zencarta-green/10 hover:text-zencarta-green dark:bg-[#0e1c12] dark:text-slate-100"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -229,15 +232,23 @@ export default function AccountPage() {
             </aside>
 
             <div className="min-w-0 flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
               {tab === "overview" && (
                 <div className="space-y-6">
-                  <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+                  <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
                     <div className="flex items-center gap-4">
                       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-zencarta-green/15 text-xl font-bold text-zencarta-green">
                         {user.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-semibold text-zencarta-navy">
+                        <p className="font-semibold text-zencarta-navy dark:text-slate-100">
                           {user.name}
                         </p>
                         <p className="text-sm text-zencarta-muted">
@@ -247,15 +258,19 @@ export default function AccountPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <Reveal
+                    variants={staggerContainer}
+                    className="grid gap-4 sm:grid-cols-3"
+                  >
                     {[
                       { label: "Total orders", value: stats?.totalOrders ?? 0 },
                       { label: "Wishlist items", value: stats?.wishlistCount ?? 0 },
                       { label: "Reward points", value: stats?.rewardPoints ?? 0 },
                     ].map((stat) => (
-                      <div
+                      <motion.div
                         key={stat.label}
-                        className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm"
+                        variants={fadeInUp}
+                        className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]"
                       >
                         <p className="text-2xl font-bold text-zencarta-green">
                           {stat.value}
@@ -263,12 +278,12 @@ export default function AccountPage() {
                         <p className="mt-1 text-sm text-zencarta-muted">
                           {stat.label}
                         </p>
-                      </div>
+                      </motion.div>
                     ))}
-                  </div>
+                  </Reveal>
 
-                  <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-                    <h2 className="font-bold text-zencarta-navy">
+                  <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
+                    <h2 className="font-bold text-zencarta-navy dark:text-slate-100">
                       Recent orders
                     </h2>
                     {loadingOrders ? (
@@ -280,14 +295,14 @@ export default function AccountPage() {
                         No recent orders found.
                       </p>
                     ) : (
-                      <ul className="mt-4 divide-y divide-slate-100">
+                      <ul className="mt-4 divide-y divide-slate-100 dark:divide-[#1f3524]">
                         {orders.slice(0, 2).map((order) => (
                           <li
                             key={order.id}
                             className="flex flex-wrap items-center justify-between gap-2 py-4 first:pt-0"
                           >
                             <div>
-                              <p className="font-medium text-zencarta-navy">
+                              <p className="font-medium text-zencarta-navy dark:text-slate-100">
                                 {order.orderNumber}
                               </p>
                               <p className="text-xs text-zencarta-muted">
@@ -299,12 +314,12 @@ export default function AccountPage() {
                               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 order.status === "Delivered"
                                   ? "bg-zencarta-green/10 text-zencarta-green-dark"
-                                  : "bg-amber-50 text-amber-700"
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                               }`}
                             >
                               {order.status}
                             </span>
-                            <p className="w-full font-semibold text-zencarta-navy sm:w-auto">
+                            <p className="w-full font-semibold text-zencarta-navy sm:w-auto dark:text-slate-100">
                               ${order.total.toFixed(2)}
                             </p>
                           </li>
@@ -330,9 +345,9 @@ export default function AccountPage() {
               )}
 
               {tab === "orders" && (
-                <div className="rounded-xl border border-slate-100 bg-white shadow-sm">
-                  <div className="border-b border-slate-100 px-6 py-4">
-                    <h2 className="font-bold text-zencarta-navy">
+                <div className="rounded-xl border border-slate-100 bg-white shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
+                  <div className="border-b border-slate-100 px-6 py-4 dark:border-[#1f3524]">
+                    <h2 className="font-bold text-zencarta-navy dark:text-slate-100">
                       Order history
                     </h2>
                   </div>
@@ -345,7 +360,7 @@ export default function AccountPage() {
                       No orders have been placed yet.
                     </div>
                   ) : (
-                    <ul className="divide-y divide-slate-100">
+                    <ul className="divide-y divide-slate-100 dark:divide-[#1f3524]">
                       {orders.map((order) => (
                         <li
                           key={order.id}
@@ -356,7 +371,7 @@ export default function AccountPage() {
                               <Package className="h-5 w-5 text-zencarta-green" />
                             </div>
                             <div>
-                              <p className="font-semibold text-zencarta-navy">
+                              <p className="font-semibold text-zencarta-navy dark:text-slate-100">
                                 Order {order.orderNumber}
                               </p>
                               <p className="text-sm text-zencarta-muted">
@@ -369,12 +384,12 @@ export default function AccountPage() {
                               className={`rounded-full px-3 py-1 text-xs font-medium ${
                                 order.status === "Delivered"
                                   ? "bg-zencarta-green/10 text-zencarta-green-dark"
-                                  : "bg-amber-50 text-amber-700"
+                                  : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
                               }`}
                             >
                               {order.status}
                             </span>
-                            <p className="font-bold text-zencarta-navy">
+                            <p className="font-bold text-zencarta-navy dark:text-slate-100">
                               ${order.total.toFixed(2)}
                             </p>
                             <button
@@ -394,9 +409,9 @@ export default function AccountPage() {
               {tab === "profile" && (
                 <form
                   onSubmit={handleProfileSave}
-                  className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8"
+                  className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12] sm:p-8"
                 >
-                  <h2 className="font-bold text-zencarta-navy">
+                  <h2 className="font-bold text-zencarta-navy dark:text-slate-100">
                     Profile settings
                   </h2>
                   <p className="mt-1 text-sm text-zencarta-muted">
@@ -444,7 +459,7 @@ export default function AccountPage() {
                       {addresses.map((addr) => (
                         <div
                           key={addr.id}
-                          className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm"
+                          className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
@@ -453,7 +468,7 @@ export default function AccountPage() {
                                   Default
                                 </p>
                               )}
-                              <p className="mt-1 font-semibold text-zencarta-navy">
+                              <p className="mt-1 font-semibold text-zencarta-navy dark:text-slate-100">
                                 {addr.name}
                               </p>
                               <p className="mt-1 text-sm text-zencarta-muted">
@@ -502,7 +517,7 @@ export default function AccountPage() {
                       ))}
 
                       {addresses.length === 0 && !showAddressForm && (
-                        <p className="rounded-xl border border-slate-100 bg-white p-6 text-sm text-zencarta-muted shadow-sm">
+                        <p className="rounded-xl border border-slate-100 bg-white p-6 text-sm text-zencarta-muted shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
                           No saved addresses yet.
                         </p>
                       )}
@@ -544,9 +559,9 @@ export default function AccountPage() {
                           setAddressSaving(false);
                         }
                       }}
-                      className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm space-y-4"
+                      className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12] space-y-4"
                     >
-                      <h3 className="font-bold text-zencarta-navy">
+                      <h3 className="font-bold text-zencarta-navy dark:text-slate-100">
                         {editingAddressId ? "Edit address" : "New address"}
                       </h3>
                       <div className="grid gap-4 sm:grid-cols-2">
@@ -597,14 +612,14 @@ export default function AccountPage() {
                           required
                         />
                       </div>
-                      <label className="flex items-center gap-2 text-sm text-zencarta-navy">
+                      <label className="flex items-center gap-2 text-sm text-zencarta-navy dark:text-slate-100">
                         <input
                           type="checkbox"
                           checked={addressForm.isDefault}
                           onChange={(e) =>
                             setAddressForm((f) => ({ ...f, isDefault: e.target.checked }))
                           }
-                          className="rounded border-slate-300 text-zencarta-green focus:ring-zencarta-green"
+                          className="rounded border-slate-300 text-zencarta-green focus:ring-zencarta-green dark:border-[#2a4530]"
                         />
                         Set as default address
                       </label>
@@ -623,7 +638,7 @@ export default function AccountPage() {
                             setEditingAddressId(null);
                             setAddressForm(emptyAddressForm());
                           }}
-                          className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-zencarta-navy hover:border-slate-300"
+                          className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-zencarta-navy hover:border-slate-300 dark:border-[#1f3524] dark:text-slate-100 dark:hover:border-[#2a4530]"
                         >
                           Cancel
                         </button>
@@ -637,13 +652,15 @@ export default function AccountPage() {
                         setEditingAddressId(null);
                         setShowAddressForm(true);
                       }}
-                      className="w-full rounded-xl border-2 border-dashed border-slate-200 py-8 text-sm font-medium text-zencarta-muted transition-colors hover:border-zencarta-green hover:text-zencarta-green"
+                      className="w-full rounded-xl border-2 border-dashed border-slate-200 py-8 text-sm font-medium text-zencarta-muted transition-colors hover:border-zencarta-green hover:text-zencarta-green dark:border-[#2a4530]"
                     >
                       + Add new address
                     </button>
                   )}
                 </div>
               )}
+              </motion.div>
+            </AnimatePresence>
             </div>
           </div>
         </div>
