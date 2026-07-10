@@ -16,7 +16,7 @@ import { PageShell } from "@/components/PageShell";
 import { FormField } from "@/components/FormField";
 import { Reveal } from "@/components/motion/Reveal";
 import { staggerContainer, fadeInUp } from "@/lib/motion";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 
 type AccountOrder = {
   id: string;

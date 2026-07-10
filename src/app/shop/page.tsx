@@ -1,288 +1,79 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Loader2, Search, SlidersHorizontal, Star, X } from "lucide-react";
-import type { Product } from "@/data/products";
-import { products as fallbackProducts } from "@/data/products";
+import {
+  ChevronRight,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { PageShell } from "@/components/PageShell";
 import { Reveal } from "@/components/motion/Reveal";
 import { staggerContainer } from "@/lib/motion";
+import { ProductSkeletonGrid } from "@/components/ui/ProductSkeleton";
+import { useCatalog } from "@/hooks/use-catalog";
+import {
+  ShopFiltersSidebar,
+  countActiveFilters,
+  type ShopFilters,
+} from "@/components/shop/ShopFilters";
+
+const PAGE_SIZE = 12;
+const MAX_PRICE = 500;
 
 type SortOption = "featured" | "price-low" | "price-high" | "rating";
 
-type Category = { id: string; name: string; icon?: string; count?: number };
-
-type ProductsResponse = {
-  products: Product[];
-  source: "cj" | "static";
-  configured: boolean;
-  error?: string;
-};
-
-type Filters = {
-  category: string | null;
-  priceMin: string;
-  priceMax: string;
-  minRating: number;
-  search: string;
-};
-
-const EMPTY_FILTERS: Filters = {
+const EMPTY_FILTERS: ShopFilters = {
   category: null,
-  priceMin: "",
-  priceMax: "",
+  maxPrice: MAX_PRICE,
   minRating: 0,
   search: "",
 };
 
-const RATING_OPTIONS = [4.5, 4, 3];
-
-function countActiveFilters(f: Filters): number {
-  let n = 0;
-  if (f.category) n++;
-  if (f.priceMin) n++;
-  if (f.priceMax) n++;
-  if (f.minRating > 0) n++;
-  if (f.search.trim()) n++;
-  return n;
+function filtersFromSearchParams(
+  category: string | null,
+  overrides?: Partial<ShopFilters>
+): ShopFilters {
+  return {
+    ...EMPTY_FILTERS,
+    ...overrides,
+    category: category ?? overrides?.category ?? null,
+  };
 }
 
-function SidebarContent({
-  categories,
-  filters,
-  setFilters,
-  sort,
-  setSort,
-  onClear,
-}: {
-  categories: Category[];
-  filters: Filters;
-  setFilters: (updater: (f: Filters) => Filters) => void;
-  sort: SortOption;
-  setSort: (s: SortOption) => void;
-  onClear: () => void;
-}) {
-  const sortOptions: { value: SortOption; label: string }[] = [
-    { value: "featured", label: "Featured" },
-    { value: "price-low", label: "Price: Low to High" },
-    { value: "price-high", label: "Price: High to Low" },
-    { value: "rating", label: "Top Rated" },
-  ];
+function ShopPageContent() {
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
 
-  const activeCount = countActiveFilters(filters);
-
-  return (
-    <div className="space-y-8">
-      {activeCount > 0 && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="flex items-center gap-1.5 text-xs font-semibold text-zencarta-green hover:underline"
-        >
-          <X className="h-3.5 w-3.5" />
-          Clear all filters ({activeCount})
-        </button>
-      )}
-
-      <div>
-        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
-          Categories
-        </h3>
-        <div className="mt-4 flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={() => setFilters((f) => ({ ...f, category: null }))}
-            className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-              filters.category === null
-                ? "bg-zencarta-green text-white"
-                : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
-            }`}
-          >
-            All Products
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setFilters((f) => ({ ...f, category: cat.id }))}
-              className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                filters.category === cat.id
-                  ? "bg-zencarta-green text-white"
-                  : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                {cat.icon && <span>{cat.icon}</span>}
-                {cat.name}
-              </span>
-              {typeof cat.count === "number" && (
-                <span
-                  className={`text-xs ${
-                    filters.category === cat.id ? "text-white/80" : "text-zencarta-muted"
-                  }`}
-                >
-                  {cat.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
-          Price Range
-        </h3>
-        <div className="mt-4 flex items-center gap-2">
-          <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zencarta-muted">
-              $
-            </span>
-            <input
-              type="number"
-              min={0}
-              inputMode="decimal"
-              placeholder="Min"
-              value={filters.priceMin}
-              onChange={(e) => setFilters((f) => ({ ...f, priceMin: e.target.value }))}
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-6 pr-2 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
-            />
-          </div>
-          <span className="text-zencarta-muted">–</span>
-          <div className="relative flex-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zencarta-muted">
-              $
-            </span>
-            <input
-              type="number"
-              min={0}
-              inputMode="decimal"
-              placeholder="Max"
-              value={filters.priceMax}
-              onChange={(e) => setFilters((f) => ({ ...f, priceMax: e.target.value }))}
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-6 pr-2 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
-          Rating
-        </h3>
-        <div className="mt-4 flex flex-col gap-1">
-          <button
-            type="button"
-            onClick={() => setFilters((f) => ({ ...f, minRating: 0 }))}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-              filters.minRating === 0
-                ? "bg-zencarta-green/10 text-zencarta-green"
-                : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
-            }`}
-          >
-            Any rating
-          </button>
-          {RATING_OPTIONS.map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setFilters((f) => ({ ...f, minRating: r }))}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                filters.minRating === r
-                  ? "bg-zencarta-green/10 text-zencarta-green"
-                  : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
-              }`}
-            >
-              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-              {r}+ &amp; up
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-sm font-bold tracking-wide text-zencarta-navy uppercase dark:text-slate-100">
-          Sort By
-        </h3>
-        <div className="mt-4 flex flex-col gap-1">
-          {sortOptions.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setSort(opt.value)}
-              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-                sort === opt.value
-                  ? "bg-zencarta-green/10 text-zencarta-green"
-                  : "text-zencarta-navy hover:bg-zencarta-surface dark:text-slate-100"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                  sort === opt.value ? "bg-zencarta-green" : "bg-transparent"
-                }`}
-              />
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function ShopPage() {
   const [sort, setSort] = useState<SortOption>("featured");
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [catalog, setCatalog] = useState<Product[]>(fallbackProducts);
-  const [catalogSource, setCatalogSource] = useState<"cj" | "static">("static");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState<ShopFilters>(() =>
+    filtersFromSearchParams(categoryFromUrl)
+  );
+  const { products: catalog, categories, source: catalogSource, loading } =
+    useCatalog({ productSize: 24 });
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch("/api/cj/products?page=1&size=24"),
-          fetch("/api/categories"),
-        ]);
-        const productsData = (await productsRes.json()) as ProductsResponse;
-        const categoriesData = (await categoriesRes.json()) as { categories: Category[] };
-        if (!cancelled) {
-          setCatalog(productsData.products);
-          setCatalogSource(productsData.source);
-          setCategories(categoriesData.categories);
-        }
-      } catch {
-        if (!cancelled) setCatalog(fallbackProducts);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    setFilters((prev) =>
+      filtersFromSearchParams(categoryFromUrl, {
+        maxPrice: prev.maxPrice,
+        minRating: prev.minRating,
+        search: prev.search,
+      })
+    );
+  }, [categoryFromUrl]);
 
   const sorted = useMemo(() => {
     let list = [...catalog];
     if (filters.category) {
       list = list.filter((p) => p.category === filters.category);
     }
-    if (filters.priceMin !== "") {
-      const min = Number(filters.priceMin);
-      if (!Number.isNaN(min)) list = list.filter((p) => p.price >= min);
-    }
-    if (filters.priceMax !== "") {
-      const max = Number(filters.priceMax);
-      if (!Number.isNaN(max)) list = list.filter((p) => p.price <= max);
+    if (filters.maxPrice < MAX_PRICE) {
+      list = list.filter((p) => p.price <= filters.maxPrice);
     }
     if (filters.minRating > 0) {
       list = list.filter((p) => p.rating >= filters.minRating);
@@ -303,14 +94,35 @@ export default function ShopPage() {
     }
   }, [catalog, sort, filters]);
 
-  const activeCount = countActiveFilters(filters);
+  const [page, setPage] = useState(1);
+  const filtersKey = JSON.stringify(filters) + sort;
+  const [prevFiltersKey, setPrevFiltersKey] = useState(filtersKey);
+  if (filtersKey !== prevFiltersKey) {
+    setPrevFiltersKey(filtersKey);
+    setPage(1);
+  }
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const visible = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const rangeStart = sorted.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, sorted.length);
+
+  const activeCount = countActiveFilters(filters, MAX_PRICE);
   const clearFilters = () => setFilters(EMPTY_FILTERS);
 
   return (
     <PageShell>
       <div className="bg-zencarta-surface py-10 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <nav className="mb-6 flex items-center gap-1.5 text-sm text-zencarta-muted">
+            <Link href="/" className="hover:text-zencarta-green">
+              Home
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="font-medium text-zencarta-navy dark:text-slate-100">Shop</span>
+          </nav>
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <span className="text-xs font-semibold tracking-widest text-zencarta-green uppercase">
                 {catalogSource === "cj" ? "CJ Dropshipping" : "Full Catalog"}
@@ -319,23 +131,43 @@ export default function ShopPage() {
                 All Products
               </h1>
               <p className="mt-2 text-sm text-zencarta-muted">
-                {loading ? "Loading products…" : `${sorted.length} products`}
+                {loading
+                  ? "Loading products…"
+                  : sorted.length === 0
+                    ? "0 results"
+                    : `Showing ${rangeStart}-${rangeEnd} of ${sorted.length} results`}
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setMobileFiltersOpen(true)}
-              className="flex items-center gap-2 self-start rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green lg:hidden dark:border-[#1f3524] dark:text-slate-100"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-              {activeCount > 0 && (
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zencarta-green text-[10px] font-bold text-white">
-                  {activeCount}
-                </span>
-              )}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(true)}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green lg:hidden dark:border-[#1f3524] dark:text-slate-100"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                Filters
+                {activeCount > 0 && (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-zencarta-green text-[10px] font-bold text-white">
+                    {activeCount}
+                  </span>
+                )}
+              </button>
+              <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-zencarta-navy dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100">
+                Sort by
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortOption)}
+                  className="bg-transparent outline-none"
+                  aria-label="Sort products"
+                >
+                  <option value="featured">Popularity</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="rating">Top Rated</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div className="relative mt-6 max-w-md">
@@ -345,19 +177,18 @@ export default function ShopPage() {
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
               placeholder="Search products…"
-              className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-zencarta-navy outline-none focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-zencarta-navy shadow-sm outline-none transition-all focus:border-zencarta-green focus:ring-2 focus:ring-zencarta-green/20 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:text-slate-100"
             />
           </div>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[240px_1fr]">
             <aside className="hidden lg:block">
-              <div className="sticky top-24 rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
-                <SidebarContent
+              <div className="sticky top-24 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md dark:border-[#1f3524] dark:bg-[#0e1c12]">
+                <ShopFiltersSidebar
                   categories={categories}
                   filters={filters}
+                  maxPrice={MAX_PRICE}
                   setFilters={setFilters}
-                  sort={sort}
-                  setSort={setSort}
                   onClear={clearFilters}
                 />
               </div>
@@ -365,9 +196,10 @@ export default function ShopPage() {
 
             <div>
               {loading ? (
-                <div className="flex justify-center py-24">
-                  <Loader2 className="h-8 w-8 animate-spin text-zencarta-green" />
-                </div>
+                <ProductSkeletonGrid
+                  count={12}
+                  className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+                />
               ) : sorted.length === 0 ? (
                 <div className="rounded-xl border border-slate-100 bg-white p-10 text-center text-sm text-zencarta-muted shadow-sm dark:border-[#1f3524] dark:bg-[#0e1c12]">
                   No products match your filters.
@@ -382,14 +214,53 @@ export default function ShopPage() {
                   )}
                 </div>
               ) : (
-                <Reveal
-                  variants={staggerContainer}
-                  className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3"
-                >
-                  {sorted.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </Reveal>
+                <>
+                  <Reveal
+                    variants={staggerContainer}
+                    className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+                  >
+                    {visible.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </Reveal>
+
+                  {pageCount > 1 && (
+                    <div className="mt-10 flex items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green disabled:opacity-40 dark:border-[#1f3524] dark:text-slate-100"
+                        aria-label="Previous page"
+                      >
+                        <ChevronRight className="h-4 w-4 rotate-180" />
+                      </button>
+                      {Array.from({ length: pageCount }).map((_, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setPage(i + 1)}
+                          className={`h-9 w-9 rounded-lg text-sm font-medium transition-colors ${
+                            page === i + 1
+                              ? "bg-zencarta-green text-white"
+                              : "text-zencarta-navy hover:bg-white dark:text-slate-100"
+                          }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                        disabled={page === pageCount}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-zencarta-navy transition-colors hover:border-zencarta-green disabled:opacity-40 dark:border-[#1f3524] dark:text-slate-100"
+                        aria-label="Next page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -430,12 +301,11 @@ export default function ShopPage() {
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto">
-                <SidebarContent
+                <ShopFiltersSidebar
                   categories={categories}
                   filters={filters}
+                  maxPrice={MAX_PRICE}
                   setFilters={setFilters}
-                  sort={sort}
-                  setSort={setSort}
                   onClear={clearFilters}
                 />
               </div>
@@ -444,5 +314,28 @@ export default function ShopPage() {
         )}
       </AnimatePresence>
     </PageShell>
+  );
+}
+
+function ShopPageFallback() {
+  return (
+    <PageShell>
+      <div className="bg-zencarta-surface py-10 sm:py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <ProductSkeletonGrid
+            count={12}
+            className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4"
+          />
+        </div>
+      </div>
+    </PageShell>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<ShopPageFallback />}>
+      <ShopPageContent />
+    </Suspense>
   );
 }

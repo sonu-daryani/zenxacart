@@ -16,7 +16,7 @@ function ReelCard({ reel, onOpen }: { reel: Reel; onOpen: () => void }) {
       variants={fadeInUp}
       whileHover={{ y: -6 }}
       onClick={onOpen}
-      className="group relative aspect-[9/16] w-40 shrink-0 overflow-hidden rounded-2xl bg-zencarta-navy text-left shadow-sm ring-1 ring-slate-100 transition-shadow hover:shadow-xl sm:w-48 dark:ring-[#1f3524]"
+      className="group relative aspect-[9/16] w-40 shrink-0 scroll-snap-item overflow-hidden rounded-2xl bg-zencarta-navy text-left shadow-sm ring-1 ring-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-zencarta-green/30 sm:w-48 dark:ring-[#1f3524]"
       aria-label={`View reel by ${reel.username}`}
     >
       <Image
@@ -76,14 +76,19 @@ export function Reels() {
           </p>
         </div>
 
-        <Reveal
-          variants={staggerContainer}
-          className="no-scrollbar mt-10 flex gap-4 overflow-x-auto pb-2 sm:gap-5"
-        >
-          {reels.map((reel) => (
-            <ReelCard key={reel.id} reel={reel} onOpen={() => setActive(reel)} />
-          ))}
-        </Reveal>
+        <div className="relative mt-10">
+          <Reveal
+            variants={staggerContainer}
+            className="scroll-snap-x scroll-fade-edges no-scrollbar flex gap-4 overflow-x-auto pb-4 sm:gap-5"
+          >
+            {reels.map((reel) => (
+              <ReelCard key={reel.id} reel={reel} onOpen={() => setActive(reel)} />
+            ))}
+          </Reveal>
+          <p className="mt-2 text-center text-xs text-zencarta-muted sm:hidden">
+            Swipe to explore more →
+          </p>
+        </div>
       </div>
 
       <ReelsModal reel={active} onClose={() => setActive(null)} />

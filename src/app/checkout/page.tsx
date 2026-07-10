@@ -14,8 +14,8 @@ import {
 import { PageShell } from "@/components/PageShell";
 import { FormField } from "@/components/FormField";
 import { OrderSummary, useOrderTotals } from "@/components/checkout/OrderSummary";
-import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/hooks/use-auth";
+import { useCart } from "@/hooks/use-cart";
 import { PayPalPayment } from "./_components/PayPalPayment";
 import { StripePayment } from "./_components/StripePayment";
 

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Heart, Loader2, ShoppingCart, Star } from "lucide-react";
+import { Check, Eye, Heart, Loader2, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Product } from "@/data/products";
@@ -29,7 +29,7 @@ export function ProductCard({ product }: { product: Product }) {
     <motion.article
       variants={fadeInUp}
       whileHover={{ y: -6 }}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-100 bg-white transition-colors hover:border-zencarta-green/30 hover:shadow-xl hover:shadow-slate-200/60 dark:border-[#1f3524] dark:bg-[#0e1c12]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white transition-all duration-300 hover:border-zencarta-green/30 hover:shadow-xl hover:shadow-slate-200/60 dark:border-[#1f3524] dark:bg-[#0e1c12] dark:hover:shadow-black/40"
     >
       {product.badge && (
         <span
@@ -47,7 +47,7 @@ export function ProductCard({ product }: { product: Product }) {
       <button
         type="button"
         onClick={() => setLiked((v) => !v)}
-        className="absolute right-3 top-12 z-10 rounded-full bg-white/90 p-2 shadow-sm transition-colors hover:bg-white dark:bg-[#16281b]/90 dark:hover:bg-[#16281b]"
+        className="absolute right-3 top-12 z-10 rounded-full bg-white/90 p-2 shadow-sm backdrop-blur-sm transition-all hover:scale-105 hover:bg-white dark:bg-[#16281b]/90 dark:hover:bg-[#16281b]"
         aria-label={liked ? "Remove from wishlist" : "Add to wishlist"}
       >
         <motion.span
@@ -61,8 +61,8 @@ export function ProductCard({ product }: { product: Product }) {
         </motion.span>
       </button>
 
-      <Link href={`/product/${product.id}`} className="contents">
-        <div className="relative aspect-square overflow-hidden bg-zencarta-surface">
+      <div className="relative aspect-square overflow-hidden bg-zencarta-surface">
+        <Link href={`/product/${product.id}`} className="block h-full w-full">
           <Image
             src={product.image}
             alt={product.name}
@@ -70,10 +70,20 @@ export function ProductCard({ product }: { product: Product }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
-        </div>
-      </Link>
+        </Link>
 
-      <div className="flex flex-1 flex-col p-4">
+        <div className="absolute inset-x-0 bottom-0 translate-y-full p-3 transition-transform duration-300 group-hover:translate-y-0">
+          <Link
+            href={`/product/${product.id}`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/95 py-2.5 text-xs font-semibold text-zencarta-navy shadow-lg backdrop-blur-sm transition-colors hover:bg-white dark:bg-[#16281b]/95 dark:text-slate-100"
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Quick View
+          </Link>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-center gap-2">
           <p className="text-xs font-medium text-zencarta-green capitalize">
             {product.category}
@@ -85,7 +95,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <Link href={`/product/${product.id}`}>
-          <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-zencarta-navy hover:text-zencarta-green dark:text-slate-100">
+          <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-zencarta-navy transition-colors hover:text-zencarta-green dark:text-slate-100">
             {product.name}
           </h3>
         </Link>
@@ -100,13 +110,13 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3 sm:pt-4">
           <div>
-            <span className="text-sm xs:text-base font-bold text-zencarta-navy sm:text-lg dark:text-slate-100">
+            <span className="text-base font-bold text-zencarta-navy sm:text-lg dark:text-slate-100">
               ${product.price.toFixed(2)}
             </span>
             {product.originalPrice && (
-              <span className="ml-2 text-sm text-zencarta-muted line-through">
+              <span className="ml-1.5 text-xs text-zencarta-muted line-through sm:text-sm">
                 ${product.originalPrice.toFixed(2)}
               </span>
             )}
@@ -116,11 +126,12 @@ export function ProductCard({ product }: { product: Product }) {
             onClick={() => add()}
             disabled={adding}
             whileTap={{ scale: 0.95 }}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 ${
+            className={`flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-60 sm:min-h-0 sm:min-w-0 ${
               added
                 ? "bg-zencarta-navy text-white"
                 : "bg-zencarta-green text-white hover:bg-zencarta-green-dark"
             }`}
+            aria-label={added ? "Added to cart" : "Add to cart"}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.span
@@ -132,13 +143,18 @@ export function ProductCard({ product }: { product: Product }) {
                 className="flex items-center gap-1.5"
               >
                 {adding ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : added ? (
-                  <Check className="h-3.5 w-3.5" />
+                  <>
+                    <Check className="h-4 w-4" />
+                    <span className="hidden sm:inline">Added!</span>
+                  </>
                 ) : (
-                  <ShoppingCart className="h-3.5 w-3.5" />
+                  <>
+                    <ShoppingCart className="h-4 w-4" />
+                    <span className="hidden sm:inline">Add</span>
+                  </>
                 )}
-                {adding ? "" : added ? "Added!" : "Add"}
               </motion.span>
             </AnimatePresence>
           </motion.button>

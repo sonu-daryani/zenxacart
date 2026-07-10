@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Product } from "@/data/products";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { resolveCjProductForCart } from "@/lib/products/resolve-cj-product";
 
 export function useAddToCart(product: Product) {

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/use-cart";
 
 const SHIPPING_THRESHOLD = 75;
 const SHIPPING_COST = 5.99;

@@ -5,7 +5,7 @@ import { Search, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { products } from "@/data/products";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/hooks/use-cart";
 
 export function SearchModal() {
   const { isSearchOpen, closeSearch, addToCart } = useCart();

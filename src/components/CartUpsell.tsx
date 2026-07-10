@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Product } from "@/data/products";
-import type { CartItem } from "@/context/CartContext";
+import type { CartItem } from "@/stores/cart-store";
 import { useAddToCart } from "@/lib/products/use-add-to-cart";
 
 function UpsellTile({ product }: { product: Product }) {
